@@ -128,5 +128,8 @@ namespace PdfToMarkdown.Layout
 
         /// <summary>內文右界（判斷段落是否跨頁接續用）；無法判斷時為 null。</summary>
         public double? ContentRight { get; }
+
+        /// <summary>掃描頁影像在 Markdown 中的連結路徑；未輸出影像時為 null。</summary>
+        public string ImageLink { get; set; }
     }
 }

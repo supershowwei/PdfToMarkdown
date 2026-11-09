@@ -29,7 +29,12 @@ namespace PdfToMarkdown.Tests.Golden
             var pdfPath = Path.Combine(RepoPaths.Root, "doc", pdfFileName);
             var goldenPath = Path.Combine(RepoPaths.Root, "tests", "golden", Path.ChangeExtension(pdfFileName, ".md"));
 
-            var actual = new PdfToMarkdownConverter().Convert(pdfPath);
+            // 掃描影像寫到暫存資料夾，golden 檔只比對 Markdown 中的連結
+            var imageDirectory = Path.Combine(Path.GetTempPath(), "PdfToMarkdown.Tests", Path.GetFileNameWithoutExtension(pdfFileName));
+            var options = new ConversionOptions { ImageDirectory = imageDirectory, ImageLinkPrefix = "images/" };
+
+            var actual = new PdfToMarkdownConverter().Convert(pdfPath, options);
+            Assert.NotEmpty(Directory.GetFiles(imageDirectory, "*.jpg"));
 
             if (Environment.GetEnvironmentVariable("UPDATE_GOLDEN") == "1")
             {

@@ -22,6 +22,11 @@ namespace PdfToMarkdown.Conversion
 
                 if (page.IsScanned)
                 {
+                    if (page.ImageLink != null)
+                    {
+                        markdown.Append("![第 ").Append(page.Number).Append(" 頁掃描影像](").Append(page.ImageLink).Append(")\n\n");
+                    }
+
                     markdown.Append("> 本頁為掃描影像，尚未進行文字辨識。\n\n");
                     continue;
                 }

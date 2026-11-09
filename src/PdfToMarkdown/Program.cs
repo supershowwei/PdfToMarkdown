@@ -47,9 +47,16 @@ namespace PdfToMarkdown
             try
             {
                 var converter = new PdfToMarkdownConverter();
+                var imageFolder = Path.GetFileNameWithoutExtension(options.OutputPath) + "_images";
+                var conversionOptions = new ConversionOptions
+                {
+                    ImageDirectory = Path.Combine(Path.GetDirectoryName(Path.GetFullPath(options.OutputPath)), imageFolder),
+                    ImageLinkPrefix = imageFolder + "/",
+                };
+
                 var markdown = options.DumpLines
                     ? converter.DumpLines(options.InputPath)
-                    : converter.Convert(options.InputPath);
+                    : converter.Convert(options.InputPath, conversionOptions);
 
                 var outputDirectory = Path.GetDirectoryName(Path.GetFullPath(options.OutputPath));
                 Directory.CreateDirectory(outputDirectory);
