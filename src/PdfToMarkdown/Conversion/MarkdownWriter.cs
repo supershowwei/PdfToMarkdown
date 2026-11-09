@@ -46,6 +46,17 @@ namespace PdfToMarkdown.Conversion
                     markdown.Append('#', heading.Level).Append(' ').Append(heading.Text).Append("\n\n");
                     break;
 
+                case TableBlock table:
+                    // 暫時保留原始排版，欄位切分於後續步驟加入
+                    markdown.Append("```text\n");
+                    foreach (var line in table.Lines)
+                    {
+                        markdown.Append(line.Text).Append('\n');
+                    }
+
+                    markdown.Append("```\n\n");
+                    break;
+
                 case ListItemBlock item:
                     markdown.Append("- ").Append(item.Text).Append("\n\n");
                     break;

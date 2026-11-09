@@ -25,6 +25,19 @@ namespace PdfToMarkdown.Layout
     }
 
     /// <summary>
+    /// 表格：由連續的行組成。
+    /// </summary>
+    internal sealed class TableBlock : Block
+    {
+        public TableBlock(IEnumerable<TextLine> lines)
+        {
+            Lines = new List<TextLine>(lines);
+        }
+
+        public List<TextLine> Lines { get; }
+    }
+
+    /// <summary>
     /// 標題。
     /// </summary>
     internal sealed class HeadingBlock : Block

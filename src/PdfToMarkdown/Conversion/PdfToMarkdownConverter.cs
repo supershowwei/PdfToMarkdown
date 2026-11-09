@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using PdfToMarkdown.Layout;
 using PdfToMarkdown.Pdf;
@@ -14,15 +16,17 @@ namespace PdfToMarkdown.Conversion
     {
         public string Convert(string pdfPath)
         {
-            var pages = new List<PageLayout>();
+            var contents = new List<PageContent>();
 
             using (var document = PdfDocument.Open(pdfPath))
             {
                 foreach (var pdfPage in document.GetPages())
                 {
-                    pages.Add(Analyze(PdfPageReader.Read(pdfPage)));
+                    contents.Add(PdfPageReader.Read(pdfPage));
                 }
             }
+
+            var pages = Analyze(contents);
 
             ParagraphBuilder.MergeAcrossPages(pages);
             var bodyFontSize = StructureDetector.FindBodyFontSize(pages);
@@ -59,16 +63,43 @@ namespace PdfToMarkdown.Conversion
             return dump.ToString();
         }
 
-        private static PageLayout Analyze(PageContent page)
+        private static List<PageLayout> Analyze(IReadOnlyList<PageContent> contents)
         {
-            if (page.IsScanned)
-            {
-                return new PageLayout(page.Number, true, new List<Block>());
-            }
+            var lines = contents
+                .Select(page => page.IsScanned
+                    ? new List<TextLine>()
+                    : PageNumberFilter.Apply(LineBuilder.Build(page.Fragments), page.Height))
+                .ToList();
 
-            var lines = PageNumberFilter.Apply(LineBuilder.Build(page.Fragments), page.Height);
-            var contentRight = ParagraphBuilder.FindContentRight(lines);
-            return new PageLayout(page.Number, false, ParagraphBuilder.Build(lines, contentRight), contentRight);
+            // 內文右界以相同頁寬的所有頁面一起計算，避免表格多、內文少的頁面判斷失準
+            var contentRightByWidth = contents
+                .Select((page, index) => (Width: Math.Round(page.Width), Lines: lines[index]))
+                .GroupBy(page => page.Width)
+                .ToDictionary(
+                    group => group.Key,
+                    group => ParagraphBuilder.FindContentRight(group.SelectMany(page => ProseCandidates(page.Lines))));
+
+            return contents
+                .Select((page, index) =>
+                {
+                    if (page.IsScanned)
+                    {
+                        return new PageLayout(page.Number, true, new List<Block>());
+                    }
+
+                    var contentRight = contentRightByWidth[Math.Round(page.Width)];
+                    return new PageLayout(page.Number, false, BlockBuilder.Build(lines[index], contentRight), contentRight);
+                })
+                .ToList();
+        }
+
+        /// <summary>表格以外的行。</summary>
+        private static IEnumerable<TextLine> ProseCandidates(IReadOnlyList<TextLine> lines)
+        {
+            var tableLines = new HashSet<int>(TableRegionDetector.Find(lines)
+                .SelectMany(region => Enumerable.Range(region.Start, region.End - region.Start + 1)));
+
+            return lines.Where((line, index) => !tableLines.Contains(index));
         }
     }
 }
