@@ -9,3 +9,6 @@
 *.jpg binary
 *.png binary
 *.traineddata binary
+
+# golden 檔與轉換器輸出一致使用 LF
+tests/golden/*.md text eol=lf
