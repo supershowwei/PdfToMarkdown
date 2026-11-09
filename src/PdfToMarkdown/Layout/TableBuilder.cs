@@ -20,9 +20,12 @@ namespace PdfToMarkdown.Layout
         /// <summary>
         /// 回傳每列的儲存格；每列欄位數相同。一行文字對應一列，尚未合併折行。
         /// </summary>
-        public static List<TableRow> Build(IReadOnlyList<TextLine> lines)
+        /// <param name="lines">表格範圍內的行。</param>
+        /// <param name="rulings">表格範圍內的格線；會計格式的欄位底線可補強欄位分界。</param>
+        public static List<TableRow> Build(IReadOnlyList<TextLine> lines, IReadOnlyList<Box> rulings = null)
         {
-            var separators = TableColumnDetector.FindSeparators(lines);
+            rulings = rulings ?? new Box[0];
+            var separators = TableColumnDetector.Find(lines, rulings);
             var rows = Split(lines, separators);
 
             // 跨欄的表頭（例如「115年7月1日至9月30日」橫跨三個子欄）會擋住子欄之間的走廊：
@@ -30,8 +33,8 @@ namespace PdfToMarkdown.Layout
             var headerCount = rows.TakeWhile(TableHeaderBuilder.IsHeaderRow).Count();
             if (headerCount > 0 && headerCount < lines.Count)
             {
-                var bodySeparators = TableColumnDetector.FindSeparators(lines.Skip(headerCount).ToList());
-                if (bodySeparators.Count > separators.Count)
+                var bodySeparators = TableColumnDetector.Find(lines.Skip(headerCount).ToList(), rulings);
+                if (bodySeparators.All.Count > separators.All.Count)
                 {
                     rows = Split(lines, bodySeparators);
                 }
@@ -40,11 +43,11 @@ namespace PdfToMarkdown.Layout
             return rows;
         }
 
-        private static List<TableRow> Split(IReadOnlyList<TextLine> lines, IReadOnlyList<double> separators)
+        private static List<TableRow> Split(IReadOnlyList<TextLine> lines, ColumnSeparators separators)
         {
-            var columnCount = separators.Count + 1;
+            var columnCount = separators.All.Count + 1;
             var rows = lines
-                .Select(line => SplitCells(line, separators, columnCount))
+                .Select(line => SplitCells(line, separators.All, separators.Hard, columnCount))
                 .ToList();
 
             return RemoveEmptyColumns(rows, columnCount);
@@ -53,9 +56,10 @@ namespace PdfToMarkdown.Layout
         /// <summary>
         /// 依片段中心點落在哪個欄位，把片段分到儲存格。
         /// 與前一個片段緊鄰（間距小於走廊最小寬度）時沿用前一個欄位，
-        /// 避免越過分界的折行項目名稱被切開（例如「原始到期日超過 3個月之」）。
+        /// 避免越過分界的折行項目名稱被切開（例如「原始到期日超過 3個月之」）；
+        /// 但不越過由格線得到的分界。
         /// </summary>
-        private static TableRow SplitCells(TextLine line, IReadOnlyList<double> separators, int columnCount)
+        private static TableRow SplitCells(TextLine line, IReadOnlyList<double> separators, IReadOnlyList<double> hardSeparators, int columnCount)
         {
             var cells = new List<TextFragment>[columnCount];
             for (var i = 0; i < columnCount; i++)
@@ -70,7 +74,8 @@ namespace PdfToMarkdown.Layout
             {
                 var isContinuation = previous != null
                     && (fragment.Bounds.Left - previous.Bounds.Right < fragment.FontSize * ContinuationGapRatio
-                        || TableColumnDetector.IsAttachedToNext(previous, fragment));
+                        || TableColumnDetector.IsAttachedToNext(previous, fragment))
+                    && !hardSeparators.Any(x => x > previous.Bounds.Right - 1 && x < fragment.Bounds.Left + 1);
 
                 if (!isContinuation)
                 {

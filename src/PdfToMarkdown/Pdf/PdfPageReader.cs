@@ -16,6 +16,12 @@ namespace PdfToMarkdown.Pdf
         /// <summary>字元框在基線以下的比例（約為一般字型的 descent）。</summary>
         private const double DescentRatio = 0.2;
 
+        /// <summary>格線的最大粗細（點）。</summary>
+        private const double MaxRulingThickness = 2.0;
+
+        /// <summary>格線的最小長度（點），排除點狀圖形。</summary>
+        private const double MinRulingLength = 3.0;
+
         public static PageContent Read(Page page)
         {
             // 空白字元本身不輸出，但記錄在下一個字元上，作為補空白的依據
@@ -35,7 +41,45 @@ namespace PdfToMarkdown.Pdf
 
             var isScanned = fragments.Count == 0 && page.GetImages().Any();
 
-            return new PageContent(page.Number, page.Width, page.Height, fragments, isScanned);
+            return new PageContent(page.Number, page.Width, page.Height, fragments, isScanned)
+            {
+                Rulings = ReadRulings(page),
+            };
+        }
+
+        /// <summary>
+        /// 讀取格線：填滿或描邊、且寬或高小於門檻的細長矩形（表格框線、會計格式的底線）。
+        /// </summary>
+        private static IReadOnlyList<Box> ReadRulings(Page page)
+        {
+            var rulings = new List<Box>();
+
+            foreach (var path in page.Paths)
+            {
+                if (path.IsClipping || !(path.IsFilled || path.IsStroked))
+                {
+                    continue;
+                }
+
+                foreach (var subpath in path)
+                {
+                    var rectangle = subpath.GetBoundingRectangle();
+                    if (!rectangle.HasValue)
+                    {
+                        continue;
+                    }
+
+                    var r = rectangle.Value;
+                    var isHorizontal = r.Height <= MaxRulingThickness && r.Width >= MinRulingLength;
+                    var isVertical = r.Width <= MaxRulingThickness && r.Height >= MinRulingLength;
+                    if (isHorizontal || isVertical)
+                    {
+                        rulings.Add(new Box(r.Left, page.Height - r.Top, r.Right, page.Height - r.Bottom));
+                    }
+                }
+            }
+
+            return rulings;
         }
 
         /// <summary>

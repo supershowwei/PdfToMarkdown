@@ -30,11 +30,11 @@ namespace PdfToMarkdown.Layout
     /// </summary>
     internal sealed class TableBlock : Block
     {
-        public TableBlock(IEnumerable<TextLine> lines)
+        public TableBlock(IEnumerable<TextLine> lines, IReadOnlyList<Box> rulings)
         {
             Lines = new List<TextLine>(lines);
 
-            var rows = TableRowMerger.Merge(TableBuilder.Build(Lines));
+            var rows = TableRowMerger.Merge(TableBuilder.Build(Lines, rulings));
             var (header, body) = TableHeaderBuilder.Split(rows);
             Header = header;
             Rows = body.Select(row => row.Cells.Select(AmountFormatter.Normalize).ToArray()).ToList();

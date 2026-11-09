@@ -14,6 +14,9 @@ namespace PdfToMarkdown.Conversion
     /// </summary>
     internal sealed class PdfToMarkdownConverter
     {
+        /// <summary>診斷輸出每頁最多列出的格線數量。</summary>
+        private const int MaxDumpedRulings = 20;
+
         public string Convert(string pdfPath)
         {
             var contents = new List<PageContent>();
@@ -50,7 +53,11 @@ namespace PdfToMarkdown.Conversion
                 foreach (var pdfPage in document.GetPages())
                 {
                     var page = PdfPageReader.Read(pdfPage);
-                    dump.AppendLine(Invariant($"=== page {page.Number} ({page.Width:0}x{page.Height:0}){(page.IsScanned ? " scanned" : string.Empty)}"));
+                    dump.AppendLine(Invariant($"=== page {page.Number} ({page.Width:0}x{page.Height:0}){(page.IsScanned ? " scanned" : string.Empty)} rulings={page.Rulings.Count}"));
+                    foreach (var ruling in page.Rulings.Take(MaxDumpedRulings))
+                    {
+                        dump.AppendLine(Invariant($"  ruling {ruling}"));
+                    }
 
                     foreach (var line in LineBuilder.Build(page.Fragments))
                     {
@@ -88,7 +95,7 @@ namespace PdfToMarkdown.Conversion
                     }
 
                     var contentRight = contentRightByWidth[Math.Round(page.Width)];
-                    return new PageLayout(page.Number, false, BlockBuilder.Build(lines[index], contentRight), contentRight);
+                    return new PageLayout(page.Number, false, BlockBuilder.Build(lines[index], contentRight, page.Rulings), contentRight);
                 })
                 .ToList();
         }

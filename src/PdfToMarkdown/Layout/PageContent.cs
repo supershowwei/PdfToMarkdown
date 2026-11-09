@@ -27,5 +27,8 @@ namespace PdfToMarkdown.Layout
 
         /// <summary>沒有文字層、只有影像的掃描頁。</summary>
         public bool IsScanned { get; }
+
+        /// <summary>格線（水平或垂直的細長矩形），座標與文字相同。</summary>
+        public IReadOnlyList<Box> Rulings { get; set; } = new Box[0];
     }
 }
