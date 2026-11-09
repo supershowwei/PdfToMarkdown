@@ -32,9 +32,13 @@ namespace PdfToMarkdown.Layout
         public TableBlock(IEnumerable<TextLine> lines)
         {
             Lines = new List<TextLine>(lines);
+            Rows = TableBuilder.Build(Lines);
         }
 
         public List<TextLine> Lines { get; }
+
+        /// <summary>每列的儲存格文字，每列欄位數相同。</summary>
+        public List<string[]> Rows { get; }
     }
 
     /// <summary>

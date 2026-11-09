@@ -47,14 +47,7 @@ namespace PdfToMarkdown.Conversion
                     break;
 
                 case TableBlock table:
-                    // 暫時保留原始排版，欄位切分於後續步驟加入
-                    markdown.Append("```text\n");
-                    foreach (var line in table.Lines)
-                    {
-                        markdown.Append(line.Text).Append('\n');
-                    }
-
-                    markdown.Append("```\n\n");
+                    WriteTable(markdown, table.Rows);
                     break;
 
                 case ListItemBlock item:
@@ -64,6 +57,44 @@ namespace PdfToMarkdown.Conversion
                 default:
                     throw new NotSupportedException($"未支援的區塊類型：{block.GetType().Name}");
             }
+        }
+
+        /// <summary>
+        /// 輸出 Markdown 表格，第一列作為表頭。
+        /// </summary>
+        private static void WriteTable(StringBuilder markdown, IReadOnlyList<string[]> rows)
+        {
+            if (rows.Count == 0 || rows[0].Length == 0)
+            {
+                return;
+            }
+
+            WriteRow(markdown, rows[0]);
+            markdown.Append('|');
+            for (var i = 0; i < rows[0].Length; i++)
+            {
+                markdown.Append(" --- |");
+            }
+
+            markdown.Append('\n');
+
+            for (var i = 1; i < rows.Count; i++)
+            {
+                WriteRow(markdown, rows[i]);
+            }
+
+            markdown.Append('\n');
+        }
+
+        private static void WriteRow(StringBuilder markdown, string[] cells)
+        {
+            markdown.Append('|');
+            foreach (var cell in cells)
+            {
+                markdown.Append(' ').Append(cell.Replace("|", "\\|")).Append(" |");
+            }
+
+            markdown.Append('\n');
         }
 
         /// <summary>
