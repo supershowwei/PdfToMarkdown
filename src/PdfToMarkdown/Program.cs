@@ -46,7 +46,10 @@ namespace PdfToMarkdown
 
             try
             {
-                var markdown = new PdfToMarkdownConverter().Convert(options.InputPath);
+                var converter = new PdfToMarkdownConverter();
+                var markdown = options.DumpLines
+                    ? converter.DumpLines(options.InputPath)
+                    : converter.Convert(options.InputPath);
 
                 var outputDirectory = Path.GetDirectoryName(Path.GetFullPath(options.OutputPath));
                 Directory.CreateDirectory(outputDirectory);

@@ -36,6 +36,15 @@ namespace PdfToMarkdown.Tests.Cli
             Assert.Equal("b.md", options.OutputPath);
         }
 
+        [Fact]
+        public void 診斷選項()
+        {
+            var ok = CommandLineOptions.TryParse(new[] { "a.pdf", "--dump-lines" }, out var options, out _);
+
+            Assert.True(ok);
+            Assert.True(options.DumpLines);
+        }
+
         [Theory]
         [InlineData("-h")]
         [InlineData("--help")]

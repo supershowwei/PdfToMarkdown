@@ -1,7 +1,9 @@
 using System.Collections.Generic;
+using System.Text;
 using PdfToMarkdown.Layout;
 using PdfToMarkdown.Pdf;
 using UglyToad.PdfPig;
+using static System.FormattableString;
 
 namespace PdfToMarkdown.Conversion
 {
@@ -30,6 +32,31 @@ namespace PdfToMarkdown.Conversion
             }
 
             return MarkdownWriter.Write(pages);
+        }
+
+        /// <summary>
+        /// 診斷用：輸出每頁重建後的行與座標，用來調整版面分析的門檻。
+        /// </summary>
+        public string DumpLines(string pdfPath)
+        {
+            var dump = new StringBuilder();
+
+            using (var document = PdfDocument.Open(pdfPath))
+            {
+                foreach (var pdfPage in document.GetPages())
+                {
+                    var page = PdfPageReader.Read(pdfPage);
+                    dump.AppendLine(Invariant($"=== page {page.Number} ({page.Width:0}x{page.Height:0}){(page.IsScanned ? " scanned" : string.Empty)}"));
+
+                    foreach (var line in LineBuilder.Build(page.Fragments))
+                    {
+                        var b = line.Bounds;
+                        dump.AppendLine(Invariant($"T{b.Top,6:0.0} L{b.Left,6:0.0} R{b.Right,6:0.0} F{line.FontSize,4:0.0} {(line.HasColumnGap ? "G" : " ")} | {line.Text}"));
+                    }
+                }
+            }
+
+            return dump.ToString();
         }
 
         private static PageLayout Analyze(PageContent page)

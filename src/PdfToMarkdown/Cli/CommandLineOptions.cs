@@ -13,6 +13,7 @@ namespace PdfToMarkdown.Cli
             "\n" +
             "選項：\n" +
             "  -o, --output <path>   輸出 Markdown 檔路徑（預設為輸入檔同名 .md）\n" +
+            "      --dump-lines      改為輸出每頁的行與座標（診斷用）\n" +
             "  -h, --help            顯示說明\n" +
             "  -v, --version         顯示版本";
 
@@ -23,6 +24,9 @@ namespace PdfToMarkdown.Cli
         public bool ShowHelp { get; private set; }
 
         public bool ShowVersion { get; private set; }
+
+        /// <summary>輸出每頁的行與座標，而非 Markdown（診斷用）。</summary>
+        public bool DumpLines { get; private set; }
 
         /// <summary>
         /// 解析參數；格式錯誤時回傳 false 並以 <paramref name="error"/> 說明原因。
@@ -46,6 +50,10 @@ namespace PdfToMarkdown.Cli
                     case "-v":
                     case "--version":
                         options.ShowVersion = true;
+                        break;
+
+                    case "--dump-lines":
+                        options.DumpLines = true;
                         break;
 
                     case "-o":
