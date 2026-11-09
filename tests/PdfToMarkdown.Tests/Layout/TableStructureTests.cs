@@ -172,6 +172,7 @@ namespace PdfToMarkdown.Tests.Layout
         [InlineData("4.22%", true)]
         [InlineData("-", true)]
         [InlineData("$ 19,609 $ 6,121", true)]
+        [InlineData("20%）", false)]
         [InlineData("115年3月31日", false)]
         [InlineData("註 1", false)]
         [InlineData("", false)]

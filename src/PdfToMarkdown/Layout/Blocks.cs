@@ -30,17 +30,32 @@ namespace PdfToMarkdown.Layout
     /// </summary>
     internal sealed class TableBlock : Block
     {
-        public TableBlock(IEnumerable<TextLine> lines, IReadOnlyList<Box> rulings)
+        private TableBlock(IEnumerable<TextLine> lines, IReadOnlyList<TableRow> rows)
         {
             Lines = new List<TextLine>(lines);
 
-            var rows = TableRowMerger.Merge(TableBuilder.Build(Lines, rulings));
             var (header, body) = TableHeaderBuilder.Split(rows);
             Header = header;
             Rows = body.Select(row => row.Cells.Select(AmountFormatter.Normalize).ToArray()).ToList();
 
             var columnCount = Header?.Length ?? Rows.FirstOrDefault()?.Length ?? 0;
             IsNumericColumn = Enumerable.Range(0, columnCount).Select(IsMostlyNumeric).ToArray();
+        }
+
+        /// <summary>
+        /// 沒有完整格線的表格：依文字排列切欄，再合併折行。
+        /// </summary>
+        public static TableBlock FromLines(IReadOnlyList<TextLine> lines, IReadOnlyList<Box> rulings)
+        {
+            return new TableBlock(lines, TableRowMerger.Merge(TableBuilder.Build(lines, rulings)));
+        }
+
+        /// <summary>
+        /// 有完整格線的表格：依格線切欄切列。
+        /// </summary>
+        public static TableBlock FromGrid(IReadOnlyList<TextLine> lines, LatticeGrid grid)
+        {
+            return new TableBlock(lines, LatticeTableBuilder.Build(lines, grid));
         }
 
         public List<TextLine> Lines { get; }

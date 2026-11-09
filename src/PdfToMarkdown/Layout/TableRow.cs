@@ -53,6 +53,14 @@ namespace PdfToMarkdown.Layout
         /// </summary>
         public static bool IsNumeric(string text)
         {
+            // 括號不成對（例如折行的「公司淨值 20%）」末段「20%）」）不是數值
+            var opens = text.Count(c => c == '(' || c == '（');
+            var closes = text.Count(c => c == ')' || c == '）');
+            if (opens != closes)
+            {
+                return false;
+            }
+
             var tokens = new string(text.Select(c => _currencyAndParentheses.Contains(c) ? ' ' : c).ToArray())
                 .Split(_whitespace, System.StringSplitOptions.RemoveEmptyEntries);
 

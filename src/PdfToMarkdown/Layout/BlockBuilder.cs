@@ -10,6 +10,35 @@ namespace PdfToMarkdown.Layout
     {
         public static List<Block> Build(IReadOnlyList<TextLine> lines, double? contentRight, IReadOnlyList<Box> rulings)
         {
+            // 先處理有完整格線的表格，其餘的行再依文字排列判斷表格與段落
+            var grids = LatticeGrid.Find(rulings);
+            var blocks = new List<Block>();
+            var pending = new List<TextLine>();
+            var emitted = new HashSet<LatticeGrid>();
+
+            foreach (var line in lines)
+            {
+                var grid = grids.FirstOrDefault(g => g.Contains(line));
+                if (grid == null)
+                {
+                    pending.Add(line);
+                    continue;
+                }
+
+                if (emitted.Add(grid))
+                {
+                    blocks.AddRange(BuildWithoutGrid(pending, contentRight, rulings));
+                    pending.Clear();
+                    blocks.Add(TableBlock.FromGrid(lines.Where(grid.Contains).ToList(), grid));
+                }
+            }
+
+            blocks.AddRange(BuildWithoutGrid(pending, contentRight, rulings));
+            return blocks;
+        }
+
+        private static List<Block> BuildWithoutGrid(IReadOnlyList<TextLine> lines, double? contentRight, IReadOnlyList<Box> rulings)
+        {
             var blocks = new List<Block>();
             var next = 0;
 
@@ -17,7 +46,7 @@ namespace PdfToMarkdown.Layout
             {
                 blocks.AddRange(ParagraphBuilder.Build(Slice(lines, next, start - 1), contentRight));
                 var tableLines = Slice(lines, start, end);
-                blocks.Add(new TableBlock(tableLines, RulingsNear(tableLines, rulings)));
+                blocks.Add(TableBlock.FromLines(tableLines, RulingsNear(tableLines, rulings)));
                 next = end + 1;
             }
 
