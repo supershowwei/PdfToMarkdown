@@ -25,6 +25,36 @@ namespace PdfToMarkdown.Layout
     }
 
     /// <summary>
+    /// 標題。
+    /// </summary>
+    internal sealed class HeadingBlock : Block
+    {
+        public HeadingBlock(int level, string text)
+        {
+            Level = level;
+            Text = text;
+        }
+
+        /// <summary>Markdown 標題層級（1～6）。</summary>
+        public int Level { get; }
+
+        public string Text { get; }
+    }
+
+    /// <summary>
+    /// 項目清單的一個項目（不含條列符號）。
+    /// </summary>
+    internal sealed class ListItemBlock : Block
+    {
+        public ListItemBlock(string text)
+        {
+            Text = text;
+        }
+
+        public string Text { get; }
+    }
+
+    /// <summary>
     /// 一頁的版面分析結果。
     /// </summary>
     internal sealed class PageLayout

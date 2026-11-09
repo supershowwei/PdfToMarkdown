@@ -23,6 +23,11 @@ namespace PdfToMarkdown.Conversion
             }
 
             ParagraphBuilder.MergeAcrossPages(pages);
+            foreach (var page in pages)
+            {
+                StructureDetector.Apply(page);
+            }
+
             return MarkdownWriter.Write(pages);
         }
 

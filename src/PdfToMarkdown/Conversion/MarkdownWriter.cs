@@ -42,6 +42,14 @@ namespace PdfToMarkdown.Conversion
                     markdown.Append(Escape(paragraph.Text)).Append("\n\n");
                     break;
 
+                case HeadingBlock heading:
+                    markdown.Append('#', heading.Level).Append(' ').Append(heading.Text).Append("\n\n");
+                    break;
+
+                case ListItemBlock item:
+                    markdown.Append("- ").Append(item.Text).Append("\n\n");
+                    break;
+
                 default:
                     throw new NotSupportedException($"未支援的區塊類型：{block.GetType().Name}");
             }
