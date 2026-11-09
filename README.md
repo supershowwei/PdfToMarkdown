@@ -26,6 +26,20 @@ dotnet build PdfToMarkdown.sln -c Release
 執行檔位於 `src/PdfToMarkdown/bin/x64/Release/net48/PdfToMarkdown.exe`。
 Tesseract 原生程式庫需要 Visual C++ 2015–2022 可轉散發套件（x64）。
 
+## 發佈
+
+```bash
+powershell -ExecutionPolicy Bypass -File tools/publish.ps1
+```
+
+建置 Release 版並輸出到 `dist/`（約 40 MB，不納入版控），內含：
+
+- `PdfToMarkdown.exe` 與相依組件、`x64/` 下的 Tesseract 原生程式庫
+- app-local 的 VC++ 執行階段（`vcruntime140*.dll`、`msvcp140.dll`，取自本機 Visual Studio 的可轉散發檔）
+- `tessdata/` 下的繁體中文、英文語言資料（自動下載，已下載過則沿用專案的 `tessdata/`）
+
+把整個 `dist` 資料夾複製到目標電腦（Windows 10 以上、已安裝 .NET Framework 4.8）即可執行，不需另外安裝語言資料。
+
 ## OCR 語言資料
 
 掃描頁 OCR 需要繁體中文與英文的語言資料（約 27 MB，不納入版控）：

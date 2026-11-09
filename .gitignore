@@ -21,3 +21,6 @@ tessdata/
 
 # 轉換輸出
 out/
+
+# 發佈輸出（由 tools/publish.ps1 產生）
+dist/
