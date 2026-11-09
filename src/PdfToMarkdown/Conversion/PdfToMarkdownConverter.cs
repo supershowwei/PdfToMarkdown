@@ -1,5 +1,7 @@
+using System.Linq;
 using System.Text;
 using UglyToad.PdfPig;
+using UglyToad.PdfPig.Content;
 using UglyToad.PdfPig.DocumentLayoutAnalysis.TextExtractor;
 
 namespace PdfToMarkdown.Conversion
@@ -19,12 +21,28 @@ namespace PdfToMarkdown.Conversion
                 {
                     // 每頁以 HTML 註解標記頁碼，方便對照原始 PDF
                     markdown.Append("<!-- page ").Append(page.Number).Append(" -->\n\n");
+
+                    if (IsScannedPage(page))
+                    {
+                        markdown.Append("> 本頁為掃描影像，尚未進行文字辨識。\n\n");
+                        continue;
+                    }
+
                     markdown.Append(ContentOrderTextExtractor.GetText(page).Replace("\r\n", "\n").TrimEnd());
                     markdown.Append("\n\n");
                 }
             }
 
             return markdown.ToString();
+        }
+
+        /// <summary>
+        /// 沒有任何文字、但有影像的頁面視為掃描頁。
+        /// </summary>
+        private static bool IsScannedPage(Page page)
+        {
+            return page.Letters.All(letter => string.IsNullOrWhiteSpace(letter.Value))
+                && page.GetImages().Any();
         }
     }
 }
