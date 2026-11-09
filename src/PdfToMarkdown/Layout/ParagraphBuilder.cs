@@ -68,6 +68,12 @@ namespace PdfToMarkdown.Layout
                 var previousPage = pages[i - 1];
                 var page = pages[i];
 
+                // 掃描頁（OCR）與文字頁的版面不同，不跨頁接續
+                if (previousPage.IsScanned || page.IsScanned)
+                {
+                    continue;
+                }
+
                 if (!(previousPage.Blocks.LastOrDefault() is ParagraphBlock tail)
                     || !(page.Blocks.FirstOrDefault() is ParagraphBlock head))
                 {

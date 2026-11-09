@@ -1,4 +1,5 @@
 using System.IO;
+using System.Linq;
 using PdfToMarkdown.Ocr;
 using PdfToMarkdown.Pdf;
 using UglyToad.PdfPig;
@@ -25,7 +26,7 @@ namespace PdfToMarkdown.Tests.Ocr
             using (var bitmap = ScannedPageRenderer.Render(document.GetPage(5)))
             using (var ocr = new TesseractOcr(tessdata))
             {
-                text = ocr.RecognizeText(bitmap);
+                text = string.Join(" ", ocr.Recognize(bitmap, ScannedPageRenderer.Dpi).Select(f => f.Text));
             }
 
             Assert.Contains("流動", text);

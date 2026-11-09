@@ -27,15 +27,9 @@ namespace PdfToMarkdown.Conversion
                         markdown.Append("![第 ").Append(page.Number).Append(" 頁掃描影像](").Append(page.ImageLink).Append(")\n\n");
                     }
 
-                    if (page.OcrText == null)
-                    {
-                        markdown.Append("> 本頁為掃描影像，尚未進行文字辨識。\n\n");
-                        continue;
-                    }
-
-                    markdown.Append("> 本頁為掃描影像，以下為 OCR 辨識結果，可能有誤。\n\n");
-                    WriteOcrText(markdown, page.OcrText);
-                    continue;
+                    markdown.Append(page.Blocks.Count == 0
+                        ? "> 本頁為掃描影像，尚未進行文字辨識。\n\n"
+                        : "> 本頁為掃描影像，以下為 OCR 辨識結果，可能有誤。\n\n");
                 }
 
                 foreach (var block in page.Blocks)
@@ -45,21 +39,6 @@ namespace PdfToMarkdown.Conversion
             }
 
             return markdown.ToString();
-        }
-
-        /// <summary>
-        /// OCR 純文字：每行輸出為一個段落（暫不重建版面，見後續步驟）。
-        /// </summary>
-        private static void WriteOcrText(StringBuilder markdown, string text)
-        {
-            foreach (var line in text.Replace("\r\n", "\n").Split('\n'))
-            {
-                var trimmed = line.Trim();
-                if (trimmed.Length > 0)
-                {
-                    markdown.Append(Escape(trimmed)).Append("\n\n");
-                }
-            }
         }
 
         private static void WriteBlock(StringBuilder markdown, Block block)

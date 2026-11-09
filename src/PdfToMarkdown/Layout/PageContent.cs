@@ -30,5 +30,8 @@ namespace PdfToMarkdown.Layout
 
         /// <summary>格線（水平或垂直的細長矩形），座標與文字相同。</summary>
         public IReadOnlyList<Box> Rulings { get; set; } = new Box[0];
+
+        /// <summary>內容來自掃描影像的 OCR 結果。</summary>
+        public bool IsOcr { get; set; }
     }
 }
