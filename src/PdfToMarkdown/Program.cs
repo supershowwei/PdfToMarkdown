@@ -3,6 +3,7 @@ using System.IO;
 using System.Reflection;
 using System.Text;
 using PdfToMarkdown.Cli;
+using PdfToMarkdown.Conversion;
 
 namespace PdfToMarkdown
 {
@@ -43,7 +44,20 @@ namespace PdfToMarkdown
                 return ExitCode.InputNotFound;
             }
 
-            // 轉換功能於後續步驟加入
+            try
+            {
+                var markdown = new PdfToMarkdownConverter().Convert(options.InputPath);
+
+                var outputDirectory = Path.GetDirectoryName(Path.GetFullPath(options.OutputPath));
+                Directory.CreateDirectory(outputDirectory);
+                File.WriteAllText(options.OutputPath, markdown, new UTF8Encoding(false));
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"轉換失敗：{ex.Message}");
+                return ExitCode.ConversionFailed;
+            }
+
             Console.WriteLine($"{options.InputPath} -> {options.OutputPath}");
             return ExitCode.Success;
         }
