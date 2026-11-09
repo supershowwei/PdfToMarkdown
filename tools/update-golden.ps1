@@ -1,4 +1,4 @@
-# 重新產生 tests/golden/*.md。
+﻿# 重新產生 tests/golden/*.md。
 # 轉換邏輯有意變更時執行，並在 commit 前檢視 golden 檔的差異。
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot

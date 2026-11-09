@@ -12,3 +12,6 @@
 
 # golden 檔與轉換器輸出一致使用 LF
 tests/golden/*.md text eol=lf
+
+# PowerShell 5.1 需要 BOM 才能正確讀取 UTF-8 中文
+*.ps1 text eol=crlf

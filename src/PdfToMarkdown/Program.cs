@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Text;
 using PdfToMarkdown.Cli;
 using PdfToMarkdown.Conversion;
+using PdfToMarkdown.Ocr;
 
 namespace PdfToMarkdown
 {
@@ -52,7 +53,14 @@ namespace PdfToMarkdown
                 {
                     ImageDirectory = Path.Combine(Path.GetDirectoryName(Path.GetFullPath(options.OutputPath)), imageFolder),
                     ImageLinkPrefix = imageFolder + "/",
+                    TessdataPath = options.NoOcr ? null : TesseractOcr.FindTessdata(options.TessdataPath),
+                    Progress = message => Console.WriteLine(message),
                 };
+
+                if (!options.NoOcr && conversionOptions.TessdataPath == null)
+                {
+                    Console.Error.WriteLine("找不到 Tesseract 語言資料（chi_tra.traineddata），掃描頁將不進行 OCR。可執行 tools/get-tessdata.ps1 下載。");
+                }
 
                 var markdown = options.DumpLines
                     ? converter.DumpLines(options.InputPath)

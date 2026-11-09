@@ -16,6 +16,7 @@
     <!-- 讓未安裝 .NET Framework 4.8 Developer Pack 的機器也能建置 -->
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
     <PackageReference Include="PdfPig" Version="0.1.16" />
+    <PackageReference Include="Tesseract" Version="5.2.0" />
   </ItemGroup>
 
   <ItemGroup>

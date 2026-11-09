@@ -131,5 +131,8 @@ namespace PdfToMarkdown.Layout
 
         /// <summary>掃描頁影像在 Markdown 中的連結路徑；未輸出影像時為 null。</summary>
         public string ImageLink { get; set; }
+
+        /// <summary>掃描頁的 OCR 辨識文字；未進行 OCR 時為 null。</summary>
+        public string OcrText { get; set; }
     }
 }

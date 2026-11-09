@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Text;
 using PdfToMarkdown.Layout;
+using PdfToMarkdown.Ocr;
 using PdfToMarkdown.Pdf;
 using UglyToad.PdfPig;
 using static System.FormattableString;
@@ -27,7 +29,9 @@ namespace PdfToMarkdown.Conversion
             options = options ?? new ConversionOptions();
             var contents = new List<PageContent>();
             var imageLinks = new Dictionary<int, string>();
+            var ocrTexts = new Dictionary<int, string>();
 
+            using (var ocr = options.TessdataPath == null ? null : new TesseractOcr(options.TessdataPath))
             using (var document = PdfDocument.Open(pdfPath))
             {
                 foreach (var pdfPage in document.GetPages())
@@ -35,17 +39,32 @@ namespace PdfToMarkdown.Conversion
                     var content = PdfPageReader.Read(pdfPage);
                     contents.Add(content);
 
-                    if (content.IsScanned && options.ImageDirectory != null)
+                    if (!content.IsScanned || (options.ImageDirectory == null && ocr == null))
                     {
-                        imageLinks[content.Number] = options.ImageLinkPrefix + SaveScannedImage(pdfPage, options.ImageDirectory);
+                        continue;
+                    }
+
+                    using (var bitmap = ScannedPageRenderer.Render(pdfPage))
+                    {
+                        if (options.ImageDirectory != null)
+                        {
+                            imageLinks[content.Number] = options.ImageLinkPrefix + SaveJpeg(bitmap, content.Number, options.ImageDirectory);
+                        }
+
+                        if (ocr != null)
+                        {
+                            options.Progress?.Invoke($"OCR 第 {content.Number} 頁");
+                            ocrTexts[content.Number] = ocr.RecognizeText(bitmap);
+                        }
                     }
                 }
             }
 
             var pages = Analyze(contents);
-            foreach (var page in pages.Where(p => imageLinks.ContainsKey(p.Number)))
+            foreach (var page in pages)
             {
-                page.ImageLink = imageLinks[page.Number];
+                page.ImageLink = imageLinks.TryGetValue(page.Number, out var link) ? link : null;
+                page.OcrText = ocrTexts.TryGetValue(page.Number, out var text) ? text : null;
             }
 
             ParagraphBuilder.MergeAcrossPages(pages);
@@ -59,14 +78,13 @@ namespace PdfToMarkdown.Conversion
         }
 
         /// <summary>
-        /// 將掃描頁合成、轉正後存成 JPEG，回傳檔名（例如「p05.jpg」）。
+        /// 將掃描頁影像存成 JPEG，回傳檔名（例如「p05.jpg」）。
         /// </summary>
-        private static string SaveScannedImage(UglyToad.PdfPig.Content.Page page, string directory)
+        private static string SaveJpeg(Bitmap bitmap, int pageNumber, string directory)
         {
             Directory.CreateDirectory(directory);
-            var fileName = Invariant($"p{page.Number:00}.jpg");
+            var fileName = Invariant($"p{pageNumber:00}.jpg");
 
-            using (var bitmap = ScannedPageRenderer.Render(page))
             using (var parameters = new EncoderParameters(1))
             {
                 parameters.Param[0] = new EncoderParameter(System.Drawing.Imaging.Encoder.Quality, JpegQuality);

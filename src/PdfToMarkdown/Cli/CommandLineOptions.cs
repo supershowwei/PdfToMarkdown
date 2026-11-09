@@ -28,6 +28,12 @@ namespace PdfToMarkdown.Cli
         /// <summary>輸出每頁的行與座標，而非 Markdown（診斷用）。</summary>
         public bool DumpLines { get; private set; }
 
+        /// <summary>Tesseract 語言資料資料夾；未指定時為 null。</summary>
+        public string TessdataPath { get; private set; }
+
+        /// <summary>不對掃描頁進行 OCR。</summary>
+        public bool NoOcr { get; private set; }
+
         /// <summary>
         /// 解析參數；格式錯誤時回傳 false 並以 <paramref name="error"/> 說明原因。
         /// 只檢查格式，不檢查檔案是否存在。
@@ -54,6 +60,20 @@ namespace PdfToMarkdown.Cli
 
                     case "--dump-lines":
                         options.DumpLines = true;
+                        break;
+
+                    case "--no-ocr":
+                        options.NoOcr = true;
+                        break;
+
+                    case "--tessdata":
+                        if (i + 1 >= args.Length || string.IsNullOrWhiteSpace(args[i + 1]))
+                        {
+                            error = "--tessdata 需要指定資料夾";
+                            return false;
+                        }
+
+                        options.TessdataPath = args[++i];
                         break;
 
                     case "-o":
