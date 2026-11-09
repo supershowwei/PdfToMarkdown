@@ -23,9 +23,10 @@ namespace PdfToMarkdown.Conversion
             }
 
             ParagraphBuilder.MergeAcrossPages(pages);
+            var bodyFontSize = StructureDetector.FindBodyFontSize(pages);
             foreach (var page in pages)
             {
-                StructureDetector.Apply(page);
+                StructureDetector.Apply(page, bodyFontSize);
             }
 
             return MarkdownWriter.Write(pages);

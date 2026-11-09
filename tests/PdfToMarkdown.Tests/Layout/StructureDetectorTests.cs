@@ -87,10 +87,65 @@ namespace PdfToMarkdown.Tests.Layout
         {
             var page = new PageLayout(1, false, new[] { (Block)Paragraph("一、公司沿革"), Paragraph("內文") }.ToList());
 
-            StructureDetector.Apply(page);
+            StructureDetector.Apply(page, FontSize);
 
             Assert.IsType<HeadingBlock>(page.Blocks[0]);
             Assert.IsType<ParagraphBlock>(page.Blocks[1]);
+        }
+
+        /// <summary>建立指定字級的單行段落。</summary>
+        private static ParagraphBlock SizedParagraph(string text, double fontSize)
+        {
+            var fragments = text.Select((c, i) => new TextFragment(
+                c.ToString(), new Box(i * fontSize, 0, (i + 1) * fontSize, fontSize), fontSize)).ToList();
+            return new ParagraphBlock(new[] { new TextLine(fragments) });
+        }
+
+        [Fact]
+        public void 大字級的連續行合併為一級標題()
+        {
+            var page = new PageLayout(1, false, new Block[]
+            {
+                SizedParagraph("股票代碼", 10),
+                SizedParagraph("信錦企業", 20),
+                SizedParagraph("合併財務報告", 20),
+                SizedParagraph("民國115年", 13),
+            }.ToList());
+
+            StructureDetector.Apply(page, bodyFontSize: 10);
+
+            Assert.IsType<ParagraphBlock>(page.Blocks[0]);
+            var title = Assert.IsType<HeadingBlock>(page.Blocks[1]);
+            Assert.Equal(1, title.Level);
+            Assert.Equal("信錦企業 合併財務報告", title.Text);
+            Assert.Equal(2, Assert.IsType<HeadingBlock>(page.Blocks[2]).Level);
+        }
+
+        [Fact]
+        public void 目錄頁的編號項目不轉為標題()
+        {
+            var page = new PageLayout(2, false, new Block[]
+            {
+                SizedParagraph("§目錄§", 16),
+                Paragraph("八、合併財務報表附註"),
+            }.ToList());
+
+            StructureDetector.Apply(page, FontSize);
+
+            Assert.Equal("目錄", Assert.IsType<HeadingBlock>(page.Blocks[0]).Text);
+            Assert.IsType<ParagraphBlock>(page.Blocks[1]);
+        }
+
+        [Fact]
+        public void 內文字級為字數最多的字級()
+        {
+            var page = new PageLayout(1, false, new Block[]
+            {
+                SizedParagraph("標題", 20),
+                SizedParagraph("這是比較長的內文", 12),
+            }.ToList());
+
+            Assert.Equal(12, StructureDetector.FindBodyFontSize(new[] { page }));
         }
     }
 }
