@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using PdfToMarkdown.Layout;
 
@@ -47,7 +48,7 @@ namespace PdfToMarkdown.Conversion
                     break;
 
                 case TableBlock table:
-                    WriteTable(markdown, table.Rows);
+                    WriteTable(markdown, table);
                     break;
 
                 case ListItemBlock item:
@@ -60,27 +61,28 @@ namespace PdfToMarkdown.Conversion
         }
 
         /// <summary>
-        /// 輸出 Markdown 表格，第一列作為表頭。
+        /// 輸出 Markdown 表格；沒有表頭時輸出空白表頭（Markdown 表格必須有表頭列）。
         /// </summary>
-        private static void WriteTable(StringBuilder markdown, IReadOnlyList<string[]> rows)
+        private static void WriteTable(StringBuilder markdown, TableBlock table)
         {
-            if (rows.Count == 0 || rows[0].Length == 0)
+            var columnCount = table.Header?.Length ?? table.Rows.FirstOrDefault()?.Length ?? 0;
+            if (columnCount == 0)
             {
                 return;
             }
 
-            WriteRow(markdown, rows[0]);
+            WriteRow(markdown, table.Header ?? new string[columnCount].Select(_ => string.Empty).ToArray());
             markdown.Append('|');
-            for (var i = 0; i < rows[0].Length; i++)
+            for (var i = 0; i < columnCount; i++)
             {
                 markdown.Append(" --- |");
             }
 
             markdown.Append('\n');
 
-            for (var i = 1; i < rows.Count; i++)
+            foreach (var row in table.Rows)
             {
-                WriteRow(markdown, rows[i]);
+                WriteRow(markdown, row);
             }
 
             markdown.Append('\n');

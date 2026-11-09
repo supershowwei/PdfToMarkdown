@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 
 namespace PdfToMarkdown.Layout
 {
@@ -32,12 +33,19 @@ namespace PdfToMarkdown.Layout
         public TableBlock(IEnumerable<TextLine> lines)
         {
             Lines = new List<TextLine>(lines);
-            Rows = TableBuilder.Build(Lines);
+
+            var rows = TableRowMerger.Merge(TableBuilder.Build(Lines));
+            var (header, body) = TableHeaderBuilder.Split(rows);
+            Header = header;
+            Rows = body.Select(row => row.Cells).ToList();
         }
 
         public List<TextLine> Lines { get; }
 
-        /// <summary>每列的儲存格文字，每列欄位數相同。</summary>
+        /// <summary>表頭；沒有表頭時為 null。</summary>
+        public string[] Header { get; }
+
+        /// <summary>資料列的儲存格文字，每列欄位數相同。</summary>
         public List<string[]> Rows { get; }
     }
 

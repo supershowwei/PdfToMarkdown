@@ -43,8 +43,8 @@ namespace PdfToMarkdown.Tests.Layout
                 Line(13, "現金@0", "3000@90", "4@220"),
             });
 
-            Assert.Equal(new[] { "存款", "100", "200" }, rows[0]);
-            Assert.Equal(new[] { "現金", "3000", "4" }, rows[1]);
+            Assert.Equal(new[] { "存款", "100", "200" }, rows[0].Cells);
+            Assert.Equal(new[] { "現金", "3000", "4" }, rows[1].Cells);
         }
 
         [Fact]
@@ -56,8 +56,8 @@ namespace PdfToMarkdown.Tests.Layout
                 Line(13, "基金@0", "1,000@170"),
             });
 
-            Assert.Equal(new[] { "股票", "$ 316,694" }, rows[0]);
-            Assert.Equal(new[] { "基金", "1,000" }, rows[1]);
+            Assert.Equal(new[] { "股票", "$ 316,694" }, rows[0].Cells);
+            Assert.Equal(new[] { "基金", "1,000" }, rows[1].Cells);
         }
 
         [Fact]
@@ -69,7 +69,7 @@ namespace PdfToMarkdown.Tests.Layout
                 Line(13, "合計@0", "2,000@130"),
             });
 
-            Assert.Equal("( 1,760 )", rows[0][1]);
+            Assert.Equal("( 1,760 )", rows[0].Cells[1]);
         }
 
         [Fact]
@@ -82,7 +82,7 @@ namespace PdfToMarkdown.Tests.Layout
                 Line(26, "存款@0", "300@100", "400@200"),
             });
 
-            Assert.Equal(new[] { "", "115年", "114年" }, rows[0]);
+            Assert.Equal(new[] { "", "115年", "114年" }, rows[0].Cells);
         }
 
         [Fact]
@@ -96,7 +96,7 @@ namespace PdfToMarkdown.Tests.Layout
                 Line(26, "質押存款@0", "200@150"),
             });
 
-            Assert.Equal(new[] { "原始到期日超過三個月之", "" }, rows[0]);
+            Assert.Equal(new[] { "原始到期日超過三個月之", "" }, rows[0].Cells);
         }
 
         [Fact]
@@ -108,7 +108,7 @@ namespace PdfToMarkdown.Tests.Layout
                 Line(13, "存款@0", "200@100"),
             });
 
-            Assert.All(rows, row => Assert.Equal(2, row.Length));
+            Assert.All(rows, row => Assert.Equal(2, row.Cells.Length));
         }
     }
 }
