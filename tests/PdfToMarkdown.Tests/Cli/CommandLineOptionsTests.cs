@@ -37,6 +37,26 @@ namespace PdfToMarkdown.Tests.Cli
         }
 
         [Fact]
+        public void 預設輸出路徑時標示為未指定()
+        {
+            CommandLineOptions.TryParse(new[] { "doc" }, out var defaults, out _);
+            CommandLineOptions.TryParse(new[] { "doc", "-o", "out" }, out var specified, out _);
+
+            Assert.False(defaults.IsOutputSpecified);
+            Assert.True(specified.IsOutputSpecified);
+        }
+
+        [Fact]
+        public void OCR選項()
+        {
+            var ok = CommandLineOptions.TryParse(new[] { "a.pdf", "--tessdata", @"tessdata-dir", "--no-ocr" }, out var options, out _);
+
+            Assert.True(ok);
+            Assert.Equal(@"tessdata-dir", options.TessdataPath);
+            Assert.True(options.NoOcr);
+        }
+
+        [Fact]
         public void 診斷選項()
         {
             var ok = CommandLineOptions.TryParse(new[] { "a.pdf", "--dump-lines" }, out var options, out _);

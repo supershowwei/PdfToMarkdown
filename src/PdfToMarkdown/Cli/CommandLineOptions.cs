@@ -9,10 +9,14 @@ namespace PdfToMarkdown.Cli
     internal sealed class CommandLineOptions
     {
         public const string Usage =
-            "用法：PdfToMarkdown <input.pdf> [-o <output.md>]\n" +
+            "用法：PdfToMarkdown <input.pdf | 資料夾> [-o <output.md | 輸出資料夾>]\n" +
             "\n" +
             "選項：\n" +
-            "  -o, --output <path>   輸出 Markdown 檔路徑（預設為輸入檔同名 .md）\n" +
+            "  -o, --output <path>   輸出 Markdown 檔路徑（預設為輸入檔同名 .md）；\n" +
+            "                        輸入為資料夾時為輸出資料夾（預設為輸入資料夾）\n" +
+            "      --tessdata <dir>  Tesseract 語言資料資料夾\n" +
+            "                        （預設依序找 TESSDATA_PREFIX、執行檔旁、目前目錄的 tessdata）\n" +
+            "      --no-ocr          不對掃描頁進行 OCR\n" +
             "      --dump-lines      改為輸出每頁的行與座標（診斷用）\n" +
             "  -h, --help            顯示說明\n" +
             "  -v, --version         顯示版本";
@@ -20,6 +24,9 @@ namespace PdfToMarkdown.Cli
         public string InputPath { get; private set; }
 
         public string OutputPath { get; private set; }
+
+        /// <summary>是否以 -o 指定了輸出路徑。</summary>
+        public bool IsOutputSpecified { get; private set; }
 
         public bool ShowHelp { get; private set; }
 
@@ -91,6 +98,7 @@ namespace PdfToMarkdown.Cli
                         }
 
                         options.OutputPath = args[++i];
+                        options.IsOutputSpecified = true;
                         break;
 
                     default:
