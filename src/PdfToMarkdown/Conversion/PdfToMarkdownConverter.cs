@@ -29,7 +29,8 @@ namespace PdfToMarkdown.Conversion
                         continue;
                     }
 
-                    foreach (var line in LineBuilder.Build(page.Fragments))
+                    var lines = PageNumberFilter.Apply(LineBuilder.Build(page.Fragments), page.Height);
+                    foreach (var line in lines)
                     {
                         markdown.Append(line.Text).Append('\n');
                     }
