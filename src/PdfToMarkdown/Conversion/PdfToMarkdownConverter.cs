@@ -21,6 +21,9 @@ namespace PdfToMarkdown.Conversion
         /// <summary>診斷輸出每頁最多列出的格線數量。</summary>
         private const int MaxDumpedRulings = 20;
 
+        /// <summary>OCR 信心低於此值的字詞視為需要核對。</summary>
+        private const double LowConfidence = 0.6;
+
         /// <summary>掃描影像的 JPEG 品質。</summary>
         private const long JpegQuality = 85;
 
@@ -167,7 +170,15 @@ namespace PdfToMarkdown.Conversion
 
                     var contentRight = contentRightByWidth[ContentRightKey(page)];
                     var blocks = BlockBuilder.Build(lines[index], contentRight, page.Rulings);
-                    return new PageLayout(page.Number, page.IsOcr, blocks, contentRight);
+                    var layout = new PageLayout(page.Number, page.IsOcr, blocks, contentRight);
+                    var confidences = page.Fragments.Where(f => f.Confidence.HasValue).Select(f => f.Confidence.Value).ToList();
+                    if (confidences.Count > 0)
+                    {
+                        layout.OcrConfidence = confidences.Average();
+                        layout.LowConfidenceWords = confidences.Count(c => c < LowConfidence);
+                    }
+
+                    return layout;
                 })
                 .ToList();
         }

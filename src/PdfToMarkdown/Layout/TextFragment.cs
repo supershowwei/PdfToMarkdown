@@ -5,12 +5,13 @@ namespace PdfToMarkdown.Layout
     /// </summary>
     internal sealed class TextFragment
     {
-        public TextFragment(string text, Box bounds, double fontSize, bool spaceBefore = false)
+        public TextFragment(string text, Box bounds, double fontSize, bool spaceBefore = false, double? confidence = null)
         {
             Text = text;
             Bounds = bounds;
             FontSize = fontSize;
             SpaceBefore = spaceBefore;
+            Confidence = confidence;
         }
 
         public string Text { get; }
@@ -22,6 +23,9 @@ namespace PdfToMarkdown.Layout
 
         /// <summary>來源中此片段前面原本有空白字元（PDF 內容串流順序）。</summary>
         public bool SpaceBefore { get; }
+
+        /// <summary>OCR 辨識信心（0～1）；PDF 文字層為 null。</summary>
+        public double? Confidence { get; }
 
         public override string ToString()
         {

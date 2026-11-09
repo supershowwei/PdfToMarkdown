@@ -131,5 +131,11 @@ namespace PdfToMarkdown.Layout
 
         /// <summary>掃描頁影像在 Markdown 中的連結路徑；未輸出影像時為 null。</summary>
         public string ImageLink { get; set; }
+
+        /// <summary>OCR 頁的平均辨識信心（0～1）；非 OCR 頁為 null。</summary>
+        public double? OcrConfidence { get; set; }
+
+        /// <summary>OCR 頁中信心偏低的字詞數。</summary>
+        public int LowConfidenceWords { get; set; }
     }
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using PdfToMarkdown.Layout;
@@ -27,9 +28,24 @@ namespace PdfToMarkdown.Conversion
                         markdown.Append("![第 ").Append(page.Number).Append(" 頁掃描影像](").Append(page.ImageLink).Append(")\n\n");
                     }
 
-                    markdown.Append(page.Blocks.Count == 0
-                        ? "> 本頁為掃描影像，尚未進行文字辨識。\n\n"
-                        : "> 本頁為掃描影像，以下為 OCR 辨識結果，可能有誤。\n\n");
+                    if (page.Blocks.Count == 0)
+                    {
+                        markdown.Append("> 本頁為掃描影像，尚未進行文字辨識。\n\n");
+                    }
+                    else
+                    {
+                        markdown.Append("> 本頁為掃描影像，以下為 OCR 辨識結果，可能有誤，請對照影像核對。");
+                        if (page.OcrConfidence.HasValue)
+                        {
+                            markdown.Append(string.Format(
+                                CultureInfo.InvariantCulture,
+                                "平均辨識信心 {0:0}%，信心偏低的字詞 {1} 個。",
+                                page.OcrConfidence.Value * 100,
+                                page.LowConfidenceWords));
+                        }
+
+                        markdown.Append("\n\n");
+                    }
                 }
 
                 foreach (var block in page.Blocks)

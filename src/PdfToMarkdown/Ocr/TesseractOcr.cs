@@ -62,7 +62,7 @@ namespace PdfToMarkdown.Ocr
         public List<TextFragment> Recognize(Bitmap bitmap, double dpi)
         {
             var toPoints = 72 / dpi;
-            var words = new List<(string Text, Rect Word, Rect Line)>();
+            var words = new List<(string Text, Rect Word, Rect Line, float Confidence)>();
 
             using (var prepared = OcrPreprocessor.Prepare(bitmap))
             using (var pix = ToPix(prepared))
@@ -77,7 +77,7 @@ namespace PdfToMarkdown.Ocr
                         && iterator.TryGetBoundingBox(PageIteratorLevel.Word, out var word)
                         && iterator.TryGetBoundingBox(PageIteratorLevel.TextLine, out var line))
                     {
-                        words.Add((text, word, line));
+                        words.Add((text, word, line, iterator.GetConfidence(PageIteratorLevel.Word) / 100f));
                     }
                 }
                 while (iterator.Next(PageIteratorLevel.Word));
@@ -98,7 +98,8 @@ namespace PdfToMarkdown.Ocr
                     FixThousandsSeparators(w.Text),
                     new Box(w.Word.X1 * toPoints, w.Line.Y1 * toPoints, w.Word.X2 * toPoints, w.Line.Y2 * toPoints),
                     fontSize,
-                    spaceBefore: true))
+                    spaceBefore: true,
+                    confidence: w.Confidence))
                 .ToList();
         }
 
