@@ -1,8 +1,7 @@
-using System.Linq;
 using System.Text;
+using PdfToMarkdown.Layout;
+using PdfToMarkdown.Pdf;
 using UglyToad.PdfPig;
-using UglyToad.PdfPig.Content;
-using UglyToad.PdfPig.DocumentLayoutAnalysis.TextExtractor;
 
 namespace PdfToMarkdown.Conversion
 {
@@ -17,32 +16,29 @@ namespace PdfToMarkdown.Conversion
 
             using (var document = PdfDocument.Open(pdfPath))
             {
-                foreach (var page in document.GetPages())
+                foreach (var pdfPage in document.GetPages())
                 {
+                    var page = PdfPageReader.Read(pdfPage);
+
                     // 每頁以 HTML 註解標記頁碼，方便對照原始 PDF
                     markdown.Append("<!-- page ").Append(page.Number).Append(" -->\n\n");
 
-                    if (IsScannedPage(page))
+                    if (page.IsScanned)
                     {
                         markdown.Append("> 本頁為掃描影像，尚未進行文字辨識。\n\n");
                         continue;
                     }
 
-                    markdown.Append(ContentOrderTextExtractor.GetText(page).Replace("\r\n", "\n").TrimEnd());
-                    markdown.Append("\n\n");
+                    foreach (var line in LineBuilder.Build(page.Fragments))
+                    {
+                        markdown.Append(line.Text).Append('\n');
+                    }
+
+                    markdown.Append('\n');
                 }
             }
 
             return markdown.ToString();
-        }
-
-        /// <summary>
-        /// 沒有任何文字、但有影像的頁面視為掃描頁。
-        /// </summary>
-        private static bool IsScannedPage(Page page)
-        {
-            return page.Letters.All(letter => string.IsNullOrWhiteSpace(letter.Value))
-                && page.GetImages().Any();
         }
     }
 }
