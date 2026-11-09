@@ -1,4 +1,4 @@
-using System.Text;
+using System.Collections.Generic;
 using PdfToMarkdown.Layout;
 using PdfToMarkdown.Pdf;
 using UglyToad.PdfPig;
@@ -12,34 +12,30 @@ namespace PdfToMarkdown.Conversion
     {
         public string Convert(string pdfPath)
         {
-            var markdown = new StringBuilder();
+            var pages = new List<PageLayout>();
 
             using (var document = PdfDocument.Open(pdfPath))
             {
                 foreach (var pdfPage in document.GetPages())
                 {
-                    var page = PdfPageReader.Read(pdfPage);
-
-                    // 每頁以 HTML 註解標記頁碼，方便對照原始 PDF
-                    markdown.Append("<!-- page ").Append(page.Number).Append(" -->\n\n");
-
-                    if (page.IsScanned)
-                    {
-                        markdown.Append("> 本頁為掃描影像，尚未進行文字辨識。\n\n");
-                        continue;
-                    }
-
-                    var lines = PageNumberFilter.Apply(LineBuilder.Build(page.Fragments), page.Height);
-                    foreach (var line in lines)
-                    {
-                        markdown.Append(line.Text).Append('\n');
-                    }
-
-                    markdown.Append('\n');
+                    pages.Add(Analyze(PdfPageReader.Read(pdfPage)));
                 }
             }
 
-            return markdown.ToString();
+            ParagraphBuilder.MergeAcrossPages(pages);
+            return MarkdownWriter.Write(pages);
+        }
+
+        private static PageLayout Analyze(PageContent page)
+        {
+            if (page.IsScanned)
+            {
+                return new PageLayout(page.Number, true, new List<Block>());
+            }
+
+            var lines = PageNumberFilter.Apply(LineBuilder.Build(page.Fragments), page.Height);
+            var contentRight = ParagraphBuilder.FindContentRight(lines);
+            return new PageLayout(page.Number, false, ParagraphBuilder.Build(lines, contentRight), contentRight);
         }
     }
 }
