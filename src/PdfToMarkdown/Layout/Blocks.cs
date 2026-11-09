@@ -37,7 +37,10 @@ namespace PdfToMarkdown.Layout
             var rows = TableRowMerger.Merge(TableBuilder.Build(Lines));
             var (header, body) = TableHeaderBuilder.Split(rows);
             Header = header;
-            Rows = body.Select(row => row.Cells).ToList();
+            Rows = body.Select(row => row.Cells.Select(AmountFormatter.Normalize).ToArray()).ToList();
+
+            var columnCount = Header?.Length ?? Rows.FirstOrDefault()?.Length ?? 0;
+            IsNumericColumn = Enumerable.Range(0, columnCount).Select(IsMostlyNumeric).ToArray();
         }
 
         public List<TextLine> Lines { get; }
@@ -47,6 +50,16 @@ namespace PdfToMarkdown.Layout
 
         /// <summary>資料列的儲存格文字，每列欄位數相同。</summary>
         public List<string[]> Rows { get; }
+
+        /// <summary>各欄是否為數值欄（輸出時靠右對齊）。</summary>
+        public bool[] IsNumericColumn { get; }
+
+        /// <summary>有文字的格子中，至少六成是數值。</summary>
+        private bool IsMostlyNumeric(int column)
+        {
+            var cells = Rows.Select(row => row[column]).Where(cell => cell.Length > 0).ToList();
+            return cells.Count > 0 && cells.Count(TableRow.IsNumeric) >= cells.Count * 0.6;
+        }
     }
 
     /// <summary>

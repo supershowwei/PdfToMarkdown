@@ -75,7 +75,8 @@ namespace PdfToMarkdown.Conversion
             markdown.Append('|');
             for (var i = 0; i < columnCount; i++)
             {
-                markdown.Append(" --- |");
+                // 數值欄靠右對齊
+                markdown.Append(table.IsNumericColumn[i] ? " ---: |" : " --- |");
             }
 
             markdown.Append('\n');
