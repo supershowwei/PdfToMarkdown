@@ -41,14 +41,13 @@ namespace PdfToMarkdown.Layout
             var gap = right.Bounds.Left - left.Bounds.Right;
             var fontSize = (left.FontSize + right.FontSize) / 2;
 
-            if (gap <= fontSize * SpaceGapRatio)
+            if (IsLetterSpaced(left, right))
             {
-                return false;
+                return gap > fontSize * WideGapRatio;
             }
 
-            return IsLetterSpaced(left, right)
-                ? gap > fontSize * WideGapRatio
-                : true;
+            // 小字級英文的字距可能小於門檻，因此也參考原本的空白字元
+            return gap > fontSize * SpaceGapRatio || right.SpaceBefore;
         }
 
         /// <summary>

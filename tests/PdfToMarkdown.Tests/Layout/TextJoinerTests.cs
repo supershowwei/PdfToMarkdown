@@ -87,5 +87,29 @@ namespace PdfToMarkdown.Tests.Layout
         {
             Assert.Equal("ab", Join("a", 0.1, "b"));
         }
+
+        [Fact]
+        public void 間距很小但原本有空白字元時補空白()
+        {
+            var fragments = new[]
+            {
+                new TextFragment("Syncmold", new Box(0, 0, 40, 8), 8),
+                new TextFragment("Enterprise", new Box(41, 0, 90, 8), 8, spaceBefore: true),
+            };
+
+            Assert.Equal("Syncmold Enterprise", TextJoiner.Join(fragments));
+        }
+
+        [Fact]
+        public void 中文字之間的原有空白字元不保留()
+        {
+            var fragments = new[]
+            {
+                new TextFragment("封", new Box(0, 0, 10, 10), 10),
+                new TextFragment("面", new Box(15, 0, 25, 10), 10, spaceBefore: true),
+            };
+
+            Assert.Equal("封面", TextJoiner.Join(fragments));
+        }
     }
 }

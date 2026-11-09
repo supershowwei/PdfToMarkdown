@@ -18,10 +18,20 @@ namespace PdfToMarkdown.Pdf
 
         public static PageContent Read(Page page)
         {
-            var fragments = page.Letters
-                .Where(letter => !string.IsNullOrWhiteSpace(letter.Value))
-                .Select(letter => ToFragment(letter, page.Height))
-                .ToList();
+            // 空白字元本身不輸出，但記錄在下一個字元上，作為補空白的依據
+            var fragments = new List<TextFragment>();
+            var spaceBefore = false;
+            foreach (var letter in page.Letters)
+            {
+                if (string.IsNullOrWhiteSpace(letter.Value))
+                {
+                    spaceBefore = true;
+                    continue;
+                }
+
+                fragments.Add(ToFragment(letter, page.Height, spaceBefore));
+                spaceBefore = false;
+            }
 
             var isScanned = fragments.Count == 0 && page.GetImages().Any();
 
@@ -32,7 +42,7 @@ namespace PdfToMarkdown.Pdf
         /// 以基線與字級推算字元框，而不用實際字形外框：
         /// 同一行的字元因此有一致的高度，標點符號也不會因外框過小而被分到別行。
         /// </summary>
-        private static TextFragment ToFragment(Letter letter, double pageHeight)
+        private static TextFragment ToFragment(Letter letter, double pageHeight, bool spaceBefore)
         {
             var size = letter.PointSize > 0 ? letter.PointSize : letter.BoundingBox.Height;
             var baseline = pageHeight - letter.StartBaseLine.Y;
@@ -43,7 +53,7 @@ namespace PdfToMarkdown.Pdf
                 letter.EndBaseLine.X,
                 baseline + size * DescentRatio);
 
-            return new TextFragment(letter.Value, bounds, size);
+            return new TextFragment(letter.Value, bounds, size, spaceBefore);
         }
     }
 }
