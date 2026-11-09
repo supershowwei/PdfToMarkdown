@@ -16,8 +16,12 @@ namespace PdfToMarkdown.Ocr
         /// <summary>辨識語言：繁體中文為主，英文與數字為輔。</summary>
         public const string Languages = "chi_tra+eng";
 
-        /// <summary>文字行框高度約為字級的此倍數（含上下伸部）。</summary>
-        private const double LineHeightToFontSize = 1.2;
+        /// <summary>文字行框是墨跡範圍，高度約為字級的此倍數（數字約 0.7、中文約 0.9）。</summary>
+        private const double LineHeightToFontSize = 0.8;
+
+        /// <summary>可帶 $ 與括號的整數金額。</summary>
+        private static readonly System.Text.RegularExpressions.Regex _amount = new System.Text.RegularExpressions.Regex(
+            @"^(?<prefix>[(（$]*)(?<digits>\d[\d,]*\d)(?<suffix>[)）]*)$");
 
         private readonly TesseractEngine _engine;
 
@@ -60,7 +64,8 @@ namespace PdfToMarkdown.Ocr
             var toPoints = 72 / dpi;
             var words = new List<(string Text, Rect Word, Rect Line)>();
 
-            using (var pix = ToPix(bitmap))
+            using (var prepared = OcrPreprocessor.Prepare(bitmap))
+            using (var pix = ToPix(prepared))
             using (var page = _engine.Process(pix))
             using (var iterator = page.GetIterator())
             {
@@ -90,11 +95,33 @@ namespace PdfToMarkdown.Ocr
             // 垂直範圍採用整行的框：同一行字詞高度一致，「一」這類扁平字才不會被分到別行
             return words
                 .Select(w => new TextFragment(
-                    w.Text,
+                    FixThousandsSeparators(w.Text),
                     new Box(w.Word.X1 * toPoints, w.Line.Y1 * toPoints, w.Word.X2 * toPoints, w.Line.Y2 * toPoints),
                     fontSize,
                     spaceBefore: true))
                 .ToList();
+        }
+
+        /// <summary>
+        /// OCR 常漏掉千分位逗號（例如「4764,142」）：已含逗號但分組不正確的整數，依三位重新分組。
+        /// 只處理已含逗號的數字，避免改動代碼、郵遞區號等原本就沒有逗號的數字。
+        /// </summary>
+        public static string FixThousandsSeparators(string text)
+        {
+            var match = _amount.Match(text);
+            if (!match.Success || !match.Groups["digits"].Value.Contains(","))
+            {
+                return text;
+            }
+
+            var digits = match.Groups["digits"].Value.Replace(",", string.Empty);
+            var grouped = long.TryParse(digits, out var value) ? value.ToString("#,0", System.Globalization.CultureInfo.InvariantCulture) : null;
+            if (grouped == null || digits.StartsWith("0", StringComparison.Ordinal))
+            {
+                return text;
+            }
+
+            return match.Groups["prefix"].Value + grouped + match.Groups["suffix"].Value;
         }
 
         public void Dispose()

@@ -33,6 +33,21 @@ namespace PdfToMarkdown.Tests.Ocr
             Assert.Contains("2,782,346", text);
         }
 
+        [Theory]
+        [InlineData("4764,142", "4,764,142")]
+        [InlineData("12919,966", "12,919,966")]
+        [InlineData("(477,87,4)", "(477,874)")]
+        [InlineData("$13347,308", "$13,347,308")]
+        [InlineData("2,782,346", "2,782,346")]
+        [InlineData("3980592", "3980592")]
+        [InlineData("1100", "1100")]
+        [InlineData("4.22%", "4.22%")]
+        [InlineData("附註", "附註")]
+        public void 修正千分位逗號(string text, string expected)
+        {
+            Assert.Equal(expected, TesseractOcr.FixThousandsSeparators(text));
+        }
+
         [Fact]
         public void 指定的資料夾沒有語言資料時不採用()
         {
