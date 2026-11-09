@@ -1,0 +1,11 @@
+# 文字檔統一正規化換行
+* text=auto
+
+# Visual Studio 檔案保留 CRLF
+*.sln text eol=crlf
+
+# 二進位檔
+*.pdf binary
+*.jpg binary
+*.png binary
+*.traineddata binary

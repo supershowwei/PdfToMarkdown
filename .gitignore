@@ -1,0 +1,23 @@
+# 建置輸出
+bin/
+obj/
+
+# Visual Studio / Rider / VS Code
+.vs/
+.idea/
+.vscode/
+*.user
+*.suo
+
+# 測試結果
+TestResults/
+
+# NuGet
+packages/
+*.nupkg
+
+# Tesseract 語言資料（由 tools/get-tessdata.ps1 下載，不納入版控）
+tessdata/
+
+# 轉換輸出
+out/
